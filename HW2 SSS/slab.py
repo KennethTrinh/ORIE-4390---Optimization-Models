@@ -157,7 +157,7 @@ def debug():
 def run(yes):
     global m
     model = gp.Model()
-    model.Params.LogToConsole = 0
+    model.Params.LogToConsole = 1
     x = model.addVars( list(product(range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'x' )
     # w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
 
