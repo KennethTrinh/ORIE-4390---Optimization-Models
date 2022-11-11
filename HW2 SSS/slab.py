@@ -28,21 +28,21 @@ t = {
     1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3
 }
 
-# n = 2
-# m = 4
-# C = { 1: [1,3], 2: [2]}
-# r = { 1: 1, 2: 1, 3: 2, 4: 2}
-# t = { 1: 0, 2: 1, 3: 0, 4: 1}
+n = 2
+m = 4
+C = { 1: [1,3], 2: [2]}
+r = { 1: 1, 2: 1, 3: 2, 4: 2}
+t = { 1: 0, 2: 1, 3: 0, 4: 1}
 
 
-df = pd.read_csv('Dataset_slab_stack.csv')
-n = 75
-m = 250
-C = {row['Product_number']: row.iloc[1:].to_numpy() for index, row in df.iterrows()}
-r = { range(1,61) : 1, range(61,161) : 2, range(161, 201) : 3, range(201, 251) : 4 }
-r = {s: stackNum for slab, stackNum in r.items() for s in slab}
-t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
-t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
+# df = pd.read_csv('Dataset_slab_stack.csv')
+# n = 75
+# m = 250
+# C = {row['Product_number']: row.iloc[1:].to_numpy() for index, row in df.iterrows()}
+# r = { range(1,61) : 1, range(61,161) : 2, range(161, 201) : 3, range(201, 251) : 4 }
+# r = {s: stackNum for slab, stackNum in r.items() for s in slab}
+# t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
+# t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
 
 
 
@@ -185,33 +185,34 @@ def run(yes):
     R = gp.quicksum( x[i, j] * t[j] for i in range(1, n+1) for j in range(1, m+1) )
 
 
-    T = 0
-    for i in range(1, n+1):
-        for j in C[i]:
-            for k in range(1, n+1):
-                for u in C[k]:
-                    if (r[j] == r[u] and t[j] < t[u]) and (i != k) and (j != u):
-                        T += x[i,j] * x[k,u]
+    # T = 0
+    # for i in range(1, n+1):
+    #     for j in C[i]:
+    #         for k in range(i+1, n+1):
+    #             for u in C[k]:
+    #                 if (r[j] == r[u] and t[j] < t[u]) and (i != k) and (j != u):
+    #                     T += x[i,j] * x[k,u]
+
     # w_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
     # w_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
     # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
 
-    # w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
-    # for i in range(1, n+1):
-    #     for j in C[i]:
-    #         for k in range(1, n+1):
-    #             for m in C[k]:
-    #                 if i!= k and j != m:
-    #                     model.addConstr( w[i,j,k,m] <= x[i,j] )
-    #                     model.addConstr( w[i,j,k,m] <= x[k,m] )
-    #                     model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
-    # T = 0
-    # for i in range(1, n+1):
-    #     for j in C[i]:
-    #         for k in range(1, n+1):
-    #             for u in C[k]:
-    #                 if (r[j] == r[u] and t[j] < t[u]):
-    #                     T += w[i,j,k,u]
+    w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
+    for i in range(1, n+1):
+        for j in C[i]:
+            for k in range(i+1, n+1):
+                for m in C[k]:
+                    if i!= k and j != m:
+                        model.addConstr( w[i,j,k,m] <= x[i,j] )
+                        model.addConstr( w[i,j,k,m] <= x[k,m] )
+                        model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
+    T = 0
+    for i in range(1, n+1):
+        for j in C[i]:
+            for k in range(i+1, n+1):
+                for u in C[k]:
+                    if (r[j] == r[u] and t[j] < t[u]) and i!= k and j != m:
+                        T += w[i,j,k,u]
 
 
     if yes:
