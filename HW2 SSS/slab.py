@@ -28,11 +28,21 @@ t = {
     1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3
 }
 
-n = 2
-m = 4
-C = { 1: [1,3], 2: [2]}
-r = { 1: 1, 2: 1, 3: 2, 4: 2}
-t = { 1: 0, 2: 1, 3: 0, 4: 1}
+# n = 2
+# m = 4
+# C = { 1: [1,3], 2: [2]}
+# r = { 1: 1, 2: 1, 3: 2, 4: 2}
+# t = { 1: 0, 2: 1, 3: 0, 4: 1}
+
+# df = pd.read_csv('Dataset_slab_stack.csv')
+# n = 75
+# m = 250
+# C = {row['Product_number']: row.iloc[1:].to_numpy() for index, row in df.iterrows()}
+# r = { range(1,61) : 1, range(61,161) : 2, range(161, 201) : 3, range(201, 251) : 4 }
+# r = {s: stackNum for slab, stackNum in r.items() for s in slab}
+# t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
+# t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
+
 
 
 
