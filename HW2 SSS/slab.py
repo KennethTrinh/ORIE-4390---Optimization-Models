@@ -34,6 +34,7 @@ t = {
 # r = { 1: 1, 2: 1, 3: 2, 4: 2}
 # t = { 1: 0, 2: 1, 3: 0, 4: 1}
 
+
 df = pd.read_csv('Dataset_slab_stack.csv')
 n = 75
 m = 250
@@ -184,32 +185,33 @@ def run(yes):
     R = gp.quicksum( x[i, j] * t[j] for i in range(1, n+1) for j in range(1, m+1) )
 
 
+    T = 0
+    for i in range(1, n+1):
+        for j in C[i]:
+            for k in range(1, n+1):
+                for u in C[k]:
+                    if (r[j] == r[u] and t[j] < t[u]) and (i != k) and (j != u):
+                        T += x[i,j] * x[k,u]
+    # w_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
+    # w_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
+    # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
+
+    # w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
+    # for i in range(1, n+1):
+    #     for j in C[i]:
+    #         for k in range(1, n+1):
+    #             for m in C[k]:
+    #                 if i!= k and j != m:
+    #                     model.addConstr( w[i,j,k,m] <= x[i,j] )
+    #                     model.addConstr( w[i,j,k,m] <= x[k,m] )
+    #                     model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
     # T = 0
     # for i in range(1, n+1):
     #     for j in C[i]:
     #         for k in range(1, n+1):
     #             for u in C[k]:
     #                 if (r[j] == r[u] and t[j] < t[u]):
-    #                     T += x[i,j] * x[k,u]
-    # w_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
-    # w_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
-    # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
-    w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
-    for i in range(1, n+1):
-        for j in C[i]:
-            for k in range(1, n+1):
-                for m in C[k]:
-                    if i!= k and j != m:
-                        model.addConstr( w[i,j,k,m] <= x[i,j] )
-                        model.addConstr( w[i,j,k,m] <= x[k,m] )
-                        model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
-    T = 0
-    for i in range(1, n+1):
-        for j in C[i]:
-            for k in range(1, n+1):
-                for u in C[k]:
-                    if (r[j] == r[u] and t[j] < t[u]):
-                        T += w[i,j,k,u]
+    #                     T += w[i,j,k,u]
 
 
     if yes:
