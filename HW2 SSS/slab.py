@@ -28,11 +28,11 @@ t = {
     1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3
 }
 
-n = 2
-m = 4
-C = { 1: [1,3], 2: [2]}
-r = { 1: 1, 2: 1, 3: 2, 4: 2}
-t = { 1: 0, 2: 1, 3: 0, 4: 1}
+# n = 2
+# m = 4
+# C = { 1: [1,3], 2: [2]}
+# r = { 1: 1, 2: 1, 3: 2, 4: 2}
+# t = { 1: 0, 2: 1, 3: 0, 4: 1}
 
 
 # df = pd.read_csv('Dataset_slab_stack.csv')
@@ -114,10 +114,10 @@ def debug():
 
     for i in range(1, n+1):
         for j in C[i]:
-            for k in range(1, n+1):
-                for m in C[k]:
-                    # if i!=k and j!=m:
-                        w.iloc[i-1, j-1][k-1, m-1] = x.iloc[i-1, j-1] * x.iloc[k-1, m-1]
+            for k in range(i+1, n+1):
+                for u in C[k]:
+                    if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
+                        w.iloc[i-1, j-1][k-1, u-1] = x.iloc[i-1, j-1] * x.iloc[k-1, u-1]
 
     # # i,j = 1,2
     # # i,j = 2,3
@@ -133,21 +133,22 @@ def debug():
         for j in C[i]:
             for k in range(1, n+1):
                 for m in C[k]:
-                    if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[i-1, j-1]:
-                        print(f'Product {i} is not used for slab {j}, but slab {m} is used for product {k}')
-                    if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[k-1, m-1]:
-                        print(f'Product {k} is not used for slab {m}, but slab {j} is used for product {i}')
-                    if w.iloc[i-1, j-1][k-1, m-1] < x.iloc[i-1, j-1] + x.iloc[k-1, m-1] - 1:
-                        print('i =', i, 'j =', j, 'k =', k, 'm =', m)
-                        print('x_ij =', x.iloc[i-1, j-1], 'x_km =', x.iloc[k-1, m-1], 'w_ijkm =', w.iloc[i-1, j-1][k-1, m-1])
-                        print()
+                    if i!=k and j!=m and (r[j] == r[m] and t[j] < t[m]):
+                        if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[i-1, j-1]:
+                            print(f'Product {i} is not used for slab {j}, but slab {m} is used for product {k}')
+                        if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[k-1, m-1]:
+                            print(f'Product {k} is not used for slab {m}, but slab {j} is used for product {i}')
+                        if w.iloc[i-1, j-1][k-1, m-1] < x.iloc[i-1, j-1] + x.iloc[k-1, m-1] - 1:
+                            print('i =', i, 'j =', j, 'k =', k, 'm =', m)
+                            print('x_ij =', x.iloc[i-1, j-1], 'x_km =', x.iloc[k-1, m-1], 'w_ijkm =', w.iloc[i-1, j-1][k-1, m-1])
+                            print()
 
     T = 0
     for i in range(1, n+1):
         for j in C[i]:
-            for k in range(1, n+1):
+            for k in range(i+1, n+1):
                 for u in C[k]:
-                    if (r[j] == r[u] and t[j] < t[u]):
+                    if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
                         T += w.iloc[i-1,j-1][k-1,u-1]
     print(x)
     print('R=', R, ' ', 'T=', T, ' ', '(R - T)=', R - T)
