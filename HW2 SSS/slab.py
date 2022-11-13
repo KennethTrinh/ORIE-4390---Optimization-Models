@@ -29,15 +29,16 @@ t = {
 # r = { 1: 1, 2: 1, 3: 2, 4: 2}
 # t = { 1: 0, 2: 1, 3: 0, 4: 1}
 
-# n = 3
-# m = 9
-# C = {
-#     1: [7, 8],
-#     2: [3, 4],
-#     3: [7]
-# }
-# r = {i: 1 for i in range(1, m+1)}
-# t = {i: i-1 for i in range(1, m+1)}
+n = 4
+m = 9
+C = {
+    1: [7, 8],
+    2: [3, 4],
+    3: [7],
+    4: [9]
+}
+r = {i: 1 for i in range(1, m+1)}
+t = {i: i-1 for i in range(1, m+1)}
 
 
 # df = pd.read_csv('Dataset_slab_stack.csv')
