@@ -47,54 +47,54 @@ def debug(n, m, S, r, t, gurobiSolution):
     # for i in range(1, n+1):
     #     for j in S[i]:
     #         for k in range(1, n+1):
-    #             for u in S[k]:
-    #                 if (r[j] == r[u] and t[j] < t[u]):
-    #                     T += x.iloc[i-1, j-1] * x.iloc[k-1, u-1]
+    #             for l in S[k]:
+    #                 if (r[j] == r[l] and t[j] < t[l]):
+    #                     T += x.iloc[i-1, j-1] * x.iloc[k-1, l-1]
 
 
     
-    # Let w_ijkm = 1 if slab j is used for product i and slab m is used for product k
-    w = [ [np.zeros((n,m)) for j in range(m) ] for i in range(n) ]
-    w = pd.DataFrame( w, index = [f'Product {i}' for i in range(1, n+1)], columns = [f'Slab {j}' for j in range(1, m+1)] )
+    # Let y_ijkm = 1 if slab j is used for product i and slab m is used for product k
+    y = [ [np.zeros((n,m)) for j in range(m) ] for i in range(n) ]
+    y = pd.DataFrame( y, index = [f'Product {i}' for i in range(1, n+1)], columns = [f'Slab {j}' for j in range(1, m+1)] )
 
     for i in range(1, n+1):
         for j in S[i]:
             for k in range(i+1, n+1):
-                for u in S[k]:
-                    if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
-                        w.iloc[i-1, j-1][k-1, u-1] = x.iloc[i-1, j-1] * x.iloc[k-1, u-1]
+                for l in S[k]:
+                    if i!=k and j!=m and (r[j] == r[l] and t[j] < t[l]):
+                        y.iloc[i-1, j-1][k-1, l-1] = x.iloc[i-1, j-1] * x.iloc[k-1, l-1]
 
     # # i,j = 1,2
     # # i,j = 2,3
     # # i,j = 3,4
-    # # print(w.iloc[i-1, j-1])
+    # # print(y.iloc[i-1, j-1])
 
 
-    # w_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
-    # w_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
-    # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
+    # y_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
+    # y_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
+    # y_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
     # is if slab j is used for product i and slab m is used for product k
     for i in range(1, n+1):
         for j in S[i]:
             for k in range(i+1, n+1):
-                for m in S[k]:
-                    if i!=k and j!=m and (r[j] == r[m] and t[j] < t[m]):
-                        if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[i-1, j-1]:
-                            print(f'Product {i} is not used for slab {j}, but slab {m} is used for product {k}')
-                        if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[k-1, m-1]:
-                            print(f'Product {k} is not used for slab {m}, but slab {j} is used for product {i}')
-                        if w.iloc[i-1, j-1][k-1, m-1] < x.iloc[i-1, j-1] + x.iloc[k-1, m-1] - 1:
-                            print('i =', i, 'j =', j, 'k =', k, 'm =', m)
-                            print('x_ij =', x.iloc[i-1, j-1], 'x_km =', x.iloc[k-1, m-1], 'w_ijkm =', w.iloc[i-1, j-1][k-1, m-1])
+                for l in S[k]:
+                    if i!=k and j!=l and (r[j] == r[l] and t[j] < t[l]):
+                        if y.iloc[i-1, j-1][k-1, l-1] > x.iloc[i-1, j-1]:
+                            print(f'Product {i} is not used for slab {j}, but slab {l} is used for product {k}')
+                        if y.iloc[i-1, j-1][k-1, l-1] > x.iloc[k-1, l-1]:
+                            print(f'Product {k} is not used for slab {l}, but slab {j} is used for product {i}')
+                        if y.iloc[i-1, j-1][k-1, l-1] < x.iloc[i-1, j-1] + x.iloc[k-1, l-1] - 1:
+                            print('i =', i, 'j =', j, 'k =', k, 'l =', l)
+                            print('x_ij =', x.iloc[i-1, j-1], 'x_kl =', x.iloc[k-1, l-1], 'y_ijkl =', y.iloc[i-1, j-1][k-1, l-1])
                             print()
 
     T = 0
     for i in range(1, n+1):
         for j in S[i]:
             for k in range(i+1, n+1):
-                for u in S[k]:
-                    if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
-                        T += w.iloc[i-1,j-1][k-1,u-1]
+                for l in S[k]:
+                    if i!=k and j!=m and (r[j] == r[l] and t[j] < t[l]):
+                        T += y.iloc[i-1,j-1][k-1,l-1]
     print(x)
     print('R=', R, ' ', 'T=', T, ' ', '(R - T)=', R - T)
     if (R - T == 4 and R == 5 and T == 1) or (R - T == 3 and R == 6 and T == 3):
@@ -106,7 +106,7 @@ def run(n, m, S, r, t):
     model.Params.LogToConsole = 1
     model.Params.OutputFlag = 1
     x = model.addVars( list(product(range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'x' )
-    # w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
+    # y = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'y' )
 
 
     # 1. every product must be produced from only one slab
@@ -138,26 +138,26 @@ def run(n, m, S, r, t):
     #                 if (r[j] == r[u] and t[j] < t[u]) and (i != k) and (j != u):
     #                     T += x[i,j] * x[k,u]
 
-    # w_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
-    # w_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
-    # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
+    # y_ijkm <= x_ij for all i, j, k, m --> if slab j is not used for product i, then for all (k, m), slab m cannot be used for product k
+    # y_ijkm <= x_km for all i, j, k, m --> if slab k is not used for product m, then for all (i, j), slab j cannot be used for product i
+    # y_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
 
-    w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
+    y = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'y' )
     for i in range(1, n+1):
         for j in S[i]:
             for k in range(i+1, n+1):
                 for m in S[k]:
                     if i!= k and j != m:
-                        model.addConstr( w[i,j,k,m] <= x[i,j] )
-                        model.addConstr( w[i,j,k,m] <= x[k,m] )
-                        model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
+                        model.addConstr( y[i,j,k,m] <= x[i,j] )
+                        model.addConstr( y[i,j,k,m] <= x[k,m] )
+                        model.addConstr( y[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
     T = 0
     for i in range(1, n+1):
         for j in S[i]:
             for k in range(i+1, n+1):
                 for u in S[k]:
                     if (r[j] == r[u] and t[j] < t[u]) and i!= k and j != m:
-                        T += w[i,j,k,u]
+                        T += y[i,j,k,u]
 
 
     model.setObjective( R - T, GRB.MINIMIZE )
@@ -216,7 +216,7 @@ t = {
 # t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
 # t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
 
-run(n, m, S, r, t)
+# run(n, m, S, r, t)
 
 
 # debug(n, m, S, r, t, gurobiSolution= [ (1, 2), (2, 3), (3, 4) ])
