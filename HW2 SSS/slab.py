@@ -4,11 +4,6 @@ from gurobipy import GRB
 import pandas as pd
 import numpy as np
 
-def subsets(nums):
-    res = [[]]
-    for num in nums:
-        res += [item + [num] for item in res]
-    return res
 
 n = 3 # number of products i ranges from 1 to n
 m = 8 # number of slabs ranges from 1 to m
@@ -34,6 +29,16 @@ t = {
 # r = { 1: 1, 2: 1, 3: 2, 4: 2}
 # t = { 1: 0, 2: 1, 3: 0, 4: 1}
 
+# n = 3
+# m = 9
+# C = {
+#     1: [7, 8],
+#     2: [3, 4],
+#     3: [7]
+# }
+# r = {i: 1 for i in range(1, m+1)}
+# t = {i: i-1 for i in range(1, m+1)}
+
 
 # df = pd.read_csv('Dataset_slab_stack.csv')
 # n = 75
@@ -48,16 +53,7 @@ t = {
 
 
 
-def debug():
-    n = 3 # number of products i ranges from 1 to n
-    m = 8 # number of slabs ranges from 1 to m
-    C = {
-        1: [2, 5],
-        2: [3, 7],
-        3: [4]
-    }
-    r = {1: 1, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2}
-    t = {1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3}
+def debug(n, m, C, r, t, gurobiSolution):
 
     # let x_ij = 1 if slab j is used for product i
     # an optimal solution is: 
@@ -67,10 +63,8 @@ def debug():
     x = [ [0 for j in range(m)] for i in range(n) ]
     x = pd.DataFrame( x, index = [f'Product {i}' for i in range(1, n+1)], columns = [f'Slab {j}' for j in range(1, m+1)] )
 
-    for i, j in [(1,5),(2,7),(3,4)]:
+    for i, j in gurobiSolution:
         x.iloc[i-1, j-1] = 1
-    # for i, j in [ (1, 2), (2, 3), (3, 4) ]: 
-    #     x.iloc[i-1, j-1] = 1
 
     # every product must be produced from only one slab
     # sum_j x_ij = 1 for all i
@@ -91,7 +85,6 @@ def debug():
         for j in range(1, m+1):
             if j not in C[i] and x.iloc[i-1, j-1] != 0:
                 print(f'Product {i} is produced on slab {j} which is not in its set of slabs')
-
 
 
     R = sum( x.iloc[i-1, j-1] * t[j] for i in range(1, n+1) for j in C[i] )
@@ -131,7 +124,7 @@ def debug():
     # is if slab j is used for product i and slab m is used for product k
     for i in range(1, n+1):
         for j in C[i]:
-            for k in range(1, n+1):
+            for k in range(i+1, n+1):
                 for m in C[k]:
                     if i!=k and j!=m and (r[j] == r[m] and t[j] < t[m]):
                         if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[i-1, j-1]:
@@ -156,8 +149,7 @@ def debug():
         print('YAY')
 
 
-def run(yes):
-    global m
+def run(n, m, C, r, t):
     model = gp.Model()
     model.Params.LogToConsole = 1
     model.Params.OutputFlag = 1
@@ -216,23 +208,50 @@ def run(yes):
                         T += w[i,j,k,u]
 
 
-    if yes:
-        model.setObjective( R - T, GRB.MINIMIZE )
+    model.setObjective( R - T, GRB.MINIMIZE )
 
-        model.optimize()
+    model.optimize()
 
-        print('Optimal value:', model.objVal)
+    print('Optimal value:', model.objVal)
 
-        for v in model.getVars():
-            if v.x > 0:
-                print(v.varName, '=', v.x)
+    for v in model.getVars():
+        if v.x > 0:
+            print(v.varName, '=', v.x)
     
 
         
 
-run(yes=True)
+run(n, m, C, r, t)
 
-# for L in subsets([1, 2, 3, 4, 5, 6, 7, 8])[1:]: run(L, yes=True)
 
-# debug()
-# for L in subsets([1, 2, 3, 4, 5, 6, 7, 8])[1:]: debug(L)
+# debug(n, m, C, r, t, gurobiSolution= [ (1, 2), (2, 3), (3, 4) ])
+# debug(n, m, C, r, t, gurobiSolution= [(1,5),(2,7),(3,4)] )
+# debug(n, m, C, r, t, gurobiSolution= [ (1,1), (2,2) ])
+
+
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
+def label(ax, rect, text):
+    rx, ry = rect.get_xy()
+    cx = rx + rect.get_width()/2.0
+    cy = ry + rect.get_height()/2.0
+    ax.annotate(text, (cx, cy), color='black', weight='bold', fontsize=10, ha='center', va='center')
+
+def stack(ax, x_start, bottom_to_top_list):
+    rectangles = [ Rectangle((x_start, i),1,1, edgecolor='r', facecolor='b') \
+                    for i, slab in enumerate(bottom_to_top_list) ]
+    for rect, slab in zip(rectangles, bottom_to_top_list):
+        ax.add_patch(rect)
+        label(ax, rect, slab)
+
+# fig, ax = plt.subplots()
+# ax.set_xlim(0, 10)
+# ax.set_ylim(0, 10)
+
+# stack(ax, 0, [4, 3, 2, 1])
+# stack(ax, 2, [8, 7, 6, 5])
+# stack(ax, 0, list(range(9, 0, -1)))
+
+# plt.show()
