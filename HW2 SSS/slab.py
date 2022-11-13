@@ -5,56 +5,7 @@ import pandas as pd
 import numpy as np
 
 
-n = 3 # number of products i ranges from 1 to n
-m = 8 # number of slabs ranges from 1 to m
-# Ci is the set of slabs that product i can be produced on
-C = {
-    1: [2, 5],
-    2: [3, 7],
-    3: [4]
-}
-# stack number that slab j is in
-r = {
-    1: 1, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2
-}
-
-# number of slabs on top of slab j
-t = {
-    1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3
-}
-
-# n = 2
-# m = 4
-# C = { 1: [1,3], 2: [2]}
-# r = { 1: 1, 2: 1, 3: 2, 4: 2}
-# t = { 1: 0, 2: 1, 3: 0, 4: 1}
-
-n = 4
-m = 9
-C = {
-    1: [7, 8],
-    2: [3, 4],
-    3: [7],
-    4: [9]
-}
-r = {i: 1 for i in range(1, m+1)}
-t = {i: i-1 for i in range(1, m+1)}
-
-
-# df = pd.read_csv('Dataset_slab_stack.csv')
-# n = 75
-# m = 250
-# C = {row['Product_number']: row.iloc[1:].to_numpy() for index, row in df.iterrows()}
-# r = { range(1,61) : 1, range(61,161) : 2, range(161, 201) : 3, range(201, 251) : 4 }
-# r = {s: stackNum for slab, stackNum in r.items() for s in slab}
-# t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
-# t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
-
-
-
-
-
-def debug(n, m, C, r, t, gurobiSolution):
+def debug(n, m, S, r, t, gurobiSolution):
 
     # let x_ij = 1 if slab j is used for product i
     # an optimal solution is: 
@@ -81,22 +32,22 @@ def debug(n, m, C, r, t, gurobiSolution):
             print(f'Slab {j} is used for more than one product')
     
     # every product must be produced on a slab that is in the set of slabs that it can be produced on
-    # x_ij = 0 for all i, j such that j not in C_i
+    # x_ij = 0 for all i, j such that j not in S_i
     for i in range(1, n+1):
         for j in range(1, m+1):
-            if j not in C[i] and x.iloc[i-1, j-1] != 0:
+            if j not in S[i] and x.iloc[i-1, j-1] != 0:
                 print(f'Product {i} is produced on slab {j} which is not in its set of slabs')
 
 
-    R = sum( x.iloc[i-1, j-1] * t[j] for i in range(1, n+1) for j in C[i] )
+    R = sum( x.iloc[i-1, j-1] * t[j] for i in range(1, n+1) for j in S[i] )
 
     
     # Let T represent the sum of deductions when slab j is used for product i due to the previous i-1 products that have been created
     # T = 0
     # for i in range(1, n+1):
-    #     for j in C[i]:
+    #     for j in S[i]:
     #         for k in range(1, n+1):
-    #             for u in C[k]:
+    #             for u in S[k]:
     #                 if (r[j] == r[u] and t[j] < t[u]):
     #                     T += x.iloc[i-1, j-1] * x.iloc[k-1, u-1]
 
@@ -107,9 +58,9 @@ def debug(n, m, C, r, t, gurobiSolution):
     w = pd.DataFrame( w, index = [f'Product {i}' for i in range(1, n+1)], columns = [f'Slab {j}' for j in range(1, m+1)] )
 
     for i in range(1, n+1):
-        for j in C[i]:
+        for j in S[i]:
             for k in range(i+1, n+1):
-                for u in C[k]:
+                for u in S[k]:
                     if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
                         w.iloc[i-1, j-1][k-1, u-1] = x.iloc[i-1, j-1] * x.iloc[k-1, u-1]
 
@@ -124,9 +75,9 @@ def debug(n, m, C, r, t, gurobiSolution):
     # w_ijkm >= x_ij + x_km - 1 for all i, j, k, m --> the only way for slab j to be used for product i and slab m to be used for product k
     # is if slab j is used for product i and slab m is used for product k
     for i in range(1, n+1):
-        for j in C[i]:
+        for j in S[i]:
             for k in range(i+1, n+1):
-                for m in C[k]:
+                for m in S[k]:
                     if i!=k and j!=m and (r[j] == r[m] and t[j] < t[m]):
                         if w.iloc[i-1, j-1][k-1, m-1] > x.iloc[i-1, j-1]:
                             print(f'Product {i} is not used for slab {j}, but slab {m} is used for product {k}')
@@ -139,9 +90,9 @@ def debug(n, m, C, r, t, gurobiSolution):
 
     T = 0
     for i in range(1, n+1):
-        for j in C[i]:
+        for j in S[i]:
             for k in range(i+1, n+1):
-                for u in C[k]:
+                for u in S[k]:
                     if i!=k and j!=m and (r[j] == r[u] and t[j] < t[u]):
                         T += w.iloc[i-1,j-1][k-1,u-1]
     print(x)
@@ -150,7 +101,7 @@ def debug(n, m, C, r, t, gurobiSolution):
         print('YAY')
 
 
-def run(n, m, C, r, t):
+def run(n, m, S, r, t):
     model = gp.Model()
     model.Params.LogToConsole = 1
     model.Params.OutputFlag = 1
@@ -169,10 +120,10 @@ def run(n, m, C, r, t):
         model.addConstr( gp.quicksum( x[i,j] for i in range(1, n+1) ) <= 1 )
 
     # 3. every product must be produced on a slab that is in the set of slabs that it can be produced on
-    # x_ij = 0 for all i, j such that j not in C_i
+    # x_ij = 0 for all i, j such that j not in S_i
     for i in range(1, n+1):
         for j in range(1, m+1):
-            if j not in C[i]:
+            if j not in S[i]:
                 model.addConstr( x[i,j] == 0 )
 
     # Let R represent the cost of producing every product, not considering the deduction of previous i-1 products that have been created
@@ -181,9 +132,9 @@ def run(n, m, C, r, t):
 
     # T = 0
     # for i in range(1, n+1):
-    #     for j in C[i]:
+    #     for j in S[i]:
     #         for k in range(i+1, n+1):
-    #             for u in C[k]:
+    #             for u in S[k]:
     #                 if (r[j] == r[u] and t[j] < t[u]) and (i != k) and (j != u):
     #                     T += x[i,j] * x[k,u]
 
@@ -193,18 +144,18 @@ def run(n, m, C, r, t):
 
     w = model.addVars( list(product(range(1, n+1), range(1, m+1), range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'w' )
     for i in range(1, n+1):
-        for j in C[i]:
+        for j in S[i]:
             for k in range(i+1, n+1):
-                for m in C[k]:
+                for m in S[k]:
                     if i!= k and j != m:
                         model.addConstr( w[i,j,k,m] <= x[i,j] )
                         model.addConstr( w[i,j,k,m] <= x[k,m] )
                         model.addConstr( w[i,j,k,m] >= x[i,j] + x[k,m] - 1 )
     T = 0
     for i in range(1, n+1):
-        for j in C[i]:
+        for j in S[i]:
             for k in range(i+1, n+1):
-                for u in C[k]:
+                for u in S[k]:
                     if (r[j] == r[u] and t[j] < t[u]) and i!= k and j != m:
                         T += w[i,j,k,u]
 
@@ -220,14 +171,57 @@ def run(n, m, C, r, t):
             print(v.varName, '=', v.x)
     
 
-        
+n = 3 # number of products i ranges from 1 to n
+m = 8 # number of slabs ranges from 1 to m
+# Si is the set of slabs that product i can be produced on
+S = {
+    1: [2, 5],
+    2: [3, 7],
+    3: [4]
+}
+# stack number that slab j is in
+r = {
+    1: 1, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2
+}
 
-run(n, m, C, r, t)
+# number of slabs on top of slab j
+t = {
+    1: 0, 2: 1, 3: 2, 4: 3, 5: 0, 6: 1, 7: 2, 8: 3
+}
+
+# n = 2
+# m = 4
+# S = { 1: [1,3], 2: [2]}
+# r = { 1: 1, 2: 1, 3: 2, 4: 2}
+# t = { 1: 0, 2: 1, 3: 0, 4: 1}
+
+# n = 4
+# m = 9
+# S = {
+#     1: [7, 8],
+#     2: [3, 4],
+#     3: [7],
+#     4: [9]
+# }
+# r = {i: 1 for i in range(1, m+1)}
+# t = {i: i-1 for i in range(1, m+1)}
 
 
-# debug(n, m, C, r, t, gurobiSolution= [ (1, 2), (2, 3), (3, 4) ])
-# debug(n, m, C, r, t, gurobiSolution= [(1,5),(2,7),(3,4)] )
-# debug(n, m, C, r, t, gurobiSolution= [ (1,1), (2,2) ])
+# df = pd.read_csv('Dataset_slab_stack.csv')
+# n = 75
+# m = 250
+# S = {row['Product_number']: row.iloc[1:].to_numpy() for index, row in df.iterrows()}
+# r = { range(1,61) : 1, range(61,161) : 2, range(161, 201) : 3, range(201, 251) : 4 }
+# r = {s: stackNum for slab, stackNum in r.items() for s in slab}
+# t = { range(1,61) , range(61,161) , range(161, 201) , range(201, 251)  }
+# t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
+
+run(n, m, S, r, t)
+
+
+# debug(n, m, S, r, t, gurobiSolution= [ (1, 2), (2, 3), (3, 4) ])
+# debug(n, m, S, r, t, gurobiSolution= [(1,5),(2,7),(3,4)] )
+# debug(n, m, S, r, t, gurobiSolution= [ (1,1), (2,2) ])
 
 
 
