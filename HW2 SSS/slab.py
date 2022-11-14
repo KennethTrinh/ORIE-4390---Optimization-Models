@@ -1,4 +1,4 @@
-from itertools import combinations, product, permutations
+from itertools import product
 import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
@@ -7,7 +7,7 @@ import numpy as np
 
 def debug(n, m, S, r, t, gurobiSolution, linear):
 
-    # let x_ij = 1 if slab j is used for product i
+    # let x_ij = 1 if slab j is used for product i else 0
     # an optimal solution is: 
 
     # x_13 = 1, x_25 = 1, x_37 = 1
@@ -97,13 +97,13 @@ def debug(n, m, S, r, t, gurobiSolution, linear):
         print('YAY')
 
 
-def run(n, m, S, r, t, linear):
+def SSS(n, m, S, r, t, linear):
     model = gp.Model()
     model.Params.LogToConsole = 1
     model.Params.OutputFlag = 1
     x = model.addVars( list(product(range(1, n+1), range(1, m+1))), vtype = GRB.BINARY, name = 'x' )
 
-    # 1. every product must be produced from only one slab
+    # 1. every product must be produced from exactly one slab
     # sum_j x_ij = 1 for all i
     for i in range(1, n+1):
         model.addConstr( gp.quicksum( x[i,j] for j in range(1, m+1) ) == 1 )
@@ -121,6 +121,7 @@ def run(n, m, S, r, t, linear):
                 model.addConstr( x[i,j] == 0 )
 
     # Let C represent the cost of producing every product, not considering the deduction of previous i-1 products that have been created
+    # C = sum_i sum_j x_ij * t_j for all i, j
     C = gp.quicksum( x[i, j] * t[j] for i in range(1, n+1) for j in range(1, m+1) )
 
     if not linear:
@@ -200,8 +201,8 @@ def generateInputs(num):
         t = {i: i-min(slab) for i in range(1,251) for slab in t if i in slab}
     return n, m, S, r, t
 
-n, m, S, r, t = generateInputs(0)
-run(n, m, S, r, t, linear = True)
+n, m, S, r, t = generateInputs(2)
+SSS(n, m, S, r, t, linear = True)
 
 # debug(*generateInputs(0), gurobiSolution= [ (1, 3), (2, 5), (3, 7) ], linear=True)
 # debug(*generateInputs(0), gurobiSolution= [(1,2),(2,6),(3,7)], linear=True)
@@ -235,4 +236,4 @@ def plot(stacks):
 
 # plot([ [7, 5, 3, 1], [8, 6, 4, 2] ])
 # plot( [list(range(9, 0, -1))] )
-plot( [ [2,1] , [4,3] ] )
+# plot( [ [2,1] , [4,3] ] )
