@@ -237,3 +237,17 @@ def plot(stacks):
 # plot([ [7, 5, 3, 1], [8, 6, 4, 2] ])
 # plot( [list(range(9, 0, -1))] )
 # plot( [ [2,1] , [4,3] ] )
+
+# from matplotlib.patches import Circle
+# import os
+# from PIL import Image
+# os.chdir(os.path.join(os.getcwd(), 'Desktop', 'ORIE', 'HW2 SSS'))
+# img = Image.open('dad.png')
+# fig, ax = plt.subplots()
+# ax.imshow(img)
+# t = np.linspace(0, 2*np.pi, 100)
+# x = -10*(16*np.sin(t)**3) + 280
+# y= -10*(13*np.cos(t)-5*np.cos(2*t)-2*np.cos(3*t)-np.cos(4*t)) + 250
+# ax.plot(x, y, color='r')
+# plt.show()
+
