@@ -87,8 +87,8 @@ x = model.addVars(x, vtype=GRB.BINARY, name="x")
 
 for s in S:
     model.addConstr( gp.quicksum(x[s, s_] for s_ in S if possible(S[s], S[s_])) - 
-                    gp.quicksum(x[s_, s] for s_ in S if possible(S[s_], S[s])) == f(S[s]) 
-                    )
+                     gp.quicksum(x[s_, s] for s_ in S if possible(S[s_], S[s])) == f(S[s]) 
+                   )
 
 model.setObjective( gp.quicksum(x[s, s_] for s in S for s_ in S if possible(S[s], S[s_])) , GRB.MINIMIZE)
 
@@ -96,9 +96,24 @@ model.optimize()
 
 print('Optimal value:', model.objVal)
 
+adjacencyList = {}
 for v in model.getVars():
     if v.x > 0:
-        print(v.varName, '=', v.x)
+        indices = v.varName.replace('x', '').replace('[', '').replace(']', '').split(',')
+        # print(v.varName, '=', v.x)
+        # print(int(indices[0]), int(indices[1]))
+        # print(S[int(indices[0])], S[int(indices[1])])
+        # print(S[int(indices[0])], S[int(indices[1])], possible(S[int(indices[0])], S[int(indices[1])]))
+        adjacencyList[S[int(indices[0])]] = S[int(indices[1])]
+
+start = (1,3,7,9)
+path = [start]
+while path[-1] in adjacencyList: #should end at (7,9,1,3):
+    path.append(adjacencyList[path[-1]])
+    print(path[-1])
+
+
+        
 
 
 
