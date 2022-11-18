@@ -4,7 +4,9 @@ from gurobipy import GRB
 import pandas as pd
 import numpy as np
 from collections import Counter
+# import os
 
+# os.chdir(os.path.join(os.getcwd(), 'Desktop', 'ORIE', 'HW 4 Knight'))
 
 def generateStates():
     states = {}
@@ -113,6 +115,29 @@ while path[-1] in adjacencyList: #should end at (7,9,1,3):
     print(path[-1])
 
 
+import matplotlib.pyplot as plt
+dx, dy = (0.015, 0.015)
+
+x = np.arange(0, 3, 0.015)
+y = np.arange(0, 3, 0.015)
+
+(X, Y) = np.meshgrid(x, y)
+extent = (np.min(x), np.max(x), np.min(y), np.max(y))
+
+z1 = np.add.outer(range(3), range(3)) % 2
+
+white = plt.imread('dad.png')
+black = plt.imread('father.jpeg')
+def plotDad(x, y, w=True):
+    plt.imshow(white if w else black, extent=[x-0.3, x+0.3, y-0.3, y+0.3], alpha=1, zorder=1)
+
+plotDad(0.5, 0.5)
+plotDad(2.5, 0.5)
+plotDad(0.5, 2.5, False)
+plotDad(2.5, 2.5, False)
+
+plt.imshow(z1, cmap='binary_r', interpolation='nearest', extent=extent, alpha=1)
+plt.show()
         
 
 
