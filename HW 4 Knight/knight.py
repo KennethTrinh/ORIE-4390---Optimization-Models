@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 from collections import Counter
 # import os
-
 # os.chdir(os.path.join(os.getcwd(), 'Desktop', 'ORIE', 'HW 4 Knight'))
 
 def generateStates():
@@ -34,7 +33,6 @@ def possible(src, dst):
     """
     diff = [i for i in range(4) if src[i] != dst[i]]
     if len(diff) == 1:
-        # print(src[diff[0]], dst[diff[0]])
         return isKnightMove(source=src[diff[0]], destination=dst[diff[0]])
     elif len(diff) == 2 and (diff == [0,1] or diff == [2,3]):
         nodes, freqs = list(zip(*
@@ -116,30 +114,61 @@ while path[-1] in adjacencyList: #should end at (7,9,1,3):
 
 
 import matplotlib.pyplot as plt
-dx, dy = (0.015, 0.015)
+def createBoard():
+    dx, dy = (0.015, 0.015)
+    x = np.arange(0, 3, 0.015)
+    y = np.arange(0, 3, 0.015)
+    extent = (np.min(x), np.max(x), np.min(y), np.max(y))
+    return np.add.outer(range(3), range(3)) % 2, extent
 
-x = np.arange(0, 3, 0.015)
-y = np.arange(0, 3, 0.015)
-
-(X, Y) = np.meshgrid(x, y)
-extent = (np.min(x), np.max(x), np.min(y), np.max(y))
-
-z1 = np.add.outer(range(3), range(3)) % 2
-
+z1, extent = createBoard()
+coordinateMap = {
+    7: (0.5, 2.5), 8: (1.5, 2.5), 9: (2.5, 2.5),
+    4: (0.5, 1.5), 5: (1.5, 1.5), 6: (2.5, 1.5),
+    1: (0.5, 0.5), 2: (1.5, 0.5), 3: (2.5, 0.5),
+}
 white = plt.imread('dad.png')
 black = plt.imread('father.jpeg')
-def plotDad(x, y, w=True):
-    plt.imshow(white if w else black, extent=[x-0.3, x+0.3, y-0.3, y+0.3], alpha=1, zorder=1)
+def plotDad(x, y, ax, w=True):
+    ax.imshow(white if w else black, extent=[x-0.3, x+0.3, y-0.3, y+0.3], alpha=1, zorder=1)
 
-plotDad(0.5, 0.5)
-plotDad(2.5, 0.5)
-plotDad(0.5, 2.5, False)
-plotDad(2.5, 2.5, False)
+def boardLayout():
+    for num, (x,y) in coordinateMap.items():
+        plt.text(x, y, str(num), ha='center', va='center', fontsize=20, color='blue')
+    plt.imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.show()
 
-plt.imshow(z1, cmap='binary_r', interpolation='nearest', extent=extent, alpha=1)
-plt.show()
+
+def initial():
+    plotDad(*coordinateMap[1], plt)
+    plotDad(*coordinateMap[3], plt)
+    plotDad(*coordinateMap[7], plt, w=False)
+    plotDad(*coordinateMap[9], plt, w=False)
+    plt.imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.title(f'Initial State: {path[0]}')
+    plt.show()
+
+def solution():
+    fig, ax = plt.subplots(4, 4, figsize=(15, 9))
+    ax = ax.flatten()
+    for i, (k1, k2, k3, k4) in enumerate(path[1:]):
+        plotDad(*coordinateMap[k1], ax[i])
+        plotDad(*coordinateMap[k2], ax[i])
+        plotDad(*coordinateMap[k3], ax[i], w=False)
+        plotDad(*coordinateMap[k4], ax[i], w=False)
+        ax[i].imshow(z1, cmap='binary_r', interpolation='nearest', extent=extent, alpha=1)
+        ax[i].set_xticks([])
+        ax[i].set_yticks([])
+        ax[i].set_title(f'Move {i+1}: {path[i]} → {path[i+1]}')
+    plt.show()
         
-
+boardLayout()
+initial()
+solution()
 
 
 
