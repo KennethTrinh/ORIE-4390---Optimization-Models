@@ -133,24 +133,23 @@ def plotDad(x, y, ax, w=True):
     ax.imshow(white if w else black, extent=[x-0.3, x+0.3, y-0.3, y+0.3], alpha=1, zorder=1)
 
 def boardLayout():
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
     for num, (x,y) in coordinateMap.items():
-        plt.text(x, y, str(num), ha='center', va='center', fontsize=20, color='blue')
-    plt.imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
-    plt.xticks([])
-    plt.yticks([])
+        ax[0].text(x, y, str(num), ha='center', va='center', fontsize=20, color='blue')
+    ax[0].imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
+    plotDad(*coordinateMap[1], ax[1])
+    plotDad(*coordinateMap[3], ax[1])
+    plotDad(*coordinateMap[7], ax[1], w=False)
+    plotDad(*coordinateMap[9], ax[1], w=False)
+    ax[1].imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
+    for i in range(2):
+        ax[i].set_xticks([])
+        ax[i].set_yticks([])
+    ax[0].set_title('Indexing of Board')
+    ax[1].set_title('Initial Knight (Frans) Configuration')
     plt.show()
 
 
-def initial():
-    plotDad(*coordinateMap[1], plt)
-    plotDad(*coordinateMap[3], plt)
-    plotDad(*coordinateMap[7], plt, w=False)
-    plotDad(*coordinateMap[9], plt, w=False)
-    plt.imshow(z1, extent=extent, cmap='binary', interpolation='nearest', alpha=1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.title(f'Initial State: {path[0]}')
-    plt.show()
 
 def solution():
     fig, ax = plt.subplots(4, 4, figsize=(15, 9))
@@ -167,7 +166,6 @@ def solution():
     plt.show()
         
 boardLayout()
-initial()
 solution()
 
 
