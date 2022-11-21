@@ -4,8 +4,8 @@ from gurobipy import GRB
 import pandas as pd
 import numpy as np
 from collections import Counter
-# import os
-# os.chdir(os.path.join(os.getcwd(), 'Desktop', 'ORIE', 'HW 4 Knight'))
+import os
+os.chdir(os.path.join(os.getcwd(), 'Desktop', 'ORIE', 'HW 4 Knight'))
 
 def generateStates():
     states = {}
@@ -74,16 +74,20 @@ def f(s):
     return 0
 
 S = generateStates()
-# Let x_ss' be 1 if there's a transition from state s to state s' and 0 otherwise
+# Let x_src,dst = 1 if there is a transition from state src to state dst and 0 otherwise
+# convert to latex
+# $ x_{src,dst} = \begin{cases} 1 & \text{if there is a transition from state src to state dst} \\ 0 & \text{otherwise} \end{cases} $
 
 model = gp.Model("knight")
 
-x = []
-for s in S:
-    for s_ in S:
-        if possible(S[s], S[s_]):
-            x.append( (s,s_) ) # model.addVar(vtype=GRB.BINARY, name="x_%s_%s" % (s, s_))
-x = model.addVars(x, vtype=GRB.BINARY, name="x")
+# x = []
+# for s in S:
+#     for s_ in S:
+#         if possible(S[s], S[s_]):
+#             x.append( (s,s_) ) # model.addVar(vtype=GRB.BINARY, name="x_%s_%s" % (s, s_))
+# x = model.addVars(x, vtype=GRB.BINARY, name="x")
+x = model.addVars( [ (src, dst) for src in S for dst in S if possible(S[src], S[dst]) ], 
+                    vtype=GRB.BINARY, name="x")
 
 for s in S:
     model.addConstr( gp.quicksum(x[s, s_] for s_ in S if possible(S[s], S[s_])) - 
@@ -119,7 +123,7 @@ def createBoard():
     x = np.arange(0, 3, 0.015)
     y = np.arange(0, 3, 0.015)
     extent = (np.min(x), np.max(x), np.min(y), np.max(y))
-    return np.add.outer(range(3), range(3)) % 2, extent
+    return np.add.outer(range(1,4), range(3)) % 2, extent
 
 z1, extent = createBoard()
 coordinateMap = {
@@ -159,7 +163,7 @@ def solution():
         plotDad(*coordinateMap[k2], ax[i])
         plotDad(*coordinateMap[k3], ax[i], w=False)
         plotDad(*coordinateMap[k4], ax[i], w=False)
-        ax[i].imshow(z1, cmap='binary_r', interpolation='nearest', extent=extent, alpha=1)
+        ax[i].imshow(z1, cmap='binary', interpolation='nearest', extent=extent, alpha=1)
         ax[i].set_xticks([])
         ax[i].set_yticks([])
         ax[i].set_title(f'Move {i+1}: {path[i]} → {path[i+1]}')
